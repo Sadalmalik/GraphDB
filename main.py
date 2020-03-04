@@ -96,16 +96,29 @@ from os import path
 
 
 class Node:
-    def __init__(self, id, data=None, _type=None, _from=None, _into=None, _relations=None):
-        self.__content = {
+    def __init__(self, content, database):
+        self.__content = content
+        self.__database = database
+        self.__changed = False
+
+    @staticmethod
+    def Create(self, id, data=None, _type=None, _from=None, _into=None, _relations=None):
+        return Node({
             'id': id,
             'name': id.split('.')[-1],
             'type': _type,
             'from': _from,
             'into': _into,
             'relations': _relations,
-        }
-        self.__changed = False
+        })
+
+    @property
+    def Id(self):
+        return self.__content['id']
+
+    @Id.setter
+    def SetId(self, value):
+        self.__content['id'] = value
 
 
 class NodeEncoder(json.JSONEncoder):
@@ -113,6 +126,16 @@ class NodeEncoder(json.JSONEncoder):
         if isinstance(obj, Node):
             return obj.__content
         return json.JSONEncoder.default(self, obj)
+
+
+def LoadJson(file):
+    with open(file, encoding='utf8') as f:
+        return json.load(f)
+
+
+def SaveJson(file, object):
+    with open(file, 'w', encoding='utf8') as f:
+        json.dump(object, f, cls=NodeEncoder)
 
 
 class GraphDB:
@@ -132,11 +155,23 @@ class GraphDB:
             # Узла нет - создадим
             pass
 
+    def GetNode(self, node):
+        if node not in self.__index:
+            _path = self.__NodeToPath(node)
+            if path.isfile(_path):
+                js = LoadJson()
+                self.__index[node] = Node(js)
+            else:
+                return None
+        return self.__index[node]
+
+    def SaveAllChanges(self):
+        pass
+
 
 def main():
-    n = Node('test.Node0')
-    print(n)
-    print(json.dumps(n, cls=NodeEncoder))
+    p = path.join(path.abspath(__file__), 'test_database')
+    db = GraphDB(p)
 
 
 if __name__ == '__main__':
