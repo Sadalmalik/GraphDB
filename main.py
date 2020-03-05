@@ -92,40 +92,11 @@ https://www.python-course.eu/python3_properties.php
 """
 
 import json
+import os
+import pathlib
 from os import path
 
-
-class Node:
-    def __init__(self, content, database):
-        self.__content = content
-        self.__database = database
-        self.__changed = False
-
-    @staticmethod
-    def Create(self, id, data=None, _type=None, _from=None, _into=None, _relations=None):
-        return Node({
-            'id': id,
-            'name': id.split('.')[-1],
-            'type': _type,
-            'from': _from,
-            'into': _into,
-            'relations': _relations,
-        })
-
-    @property
-    def Id(self):
-        return self.__content['id']
-
-    @Id.setter
-    def SetId(self, value):
-        self.__content['id'] = value
-
-
-class NodeEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Node):
-            return obj.__content
-        return json.JSONEncoder.default(self, obj)
+from Node import Node
 
 
 def LoadJson(file):
@@ -133,45 +104,64 @@ def LoadJson(file):
         return json.load(f)
 
 
-def SaveJson(file, object):
+def SaveJson(file, value):
+    _path = pathlib.Path(file).parent
+    _path.mkdir(parents=True, exist_ok=True)
     with open(file, 'w', encoding='utf8') as f:
-        json.dump(object, f, cls=NodeEncoder)
+        json.dump(value, f, indent=2)
 
 
 class GraphDB:
     def __init__(self, root_directory):
+        os.makedirs(root_directory, exist_ok=True)
         self.__root = root_directory
         self.__index = {}
+        self.__dirty = []
 
     def __NodeToPath(self, node):
-        return path.join(self.__root, *node.split('.'))
+        return path.join(self.__root, *node.split('.')) + '.json'
 
-    def CreateNode(self, node):
-        _path = self.__NodeToPath(node)
-        if path.isfile(_path):
-            # Узел есть - откроем его
-            pass
-        else:
-            # Узла нет - создадим
-            pass
-
-    def GetNode(self, node):
-        if node not in self.__index:
-            _path = self.__NodeToPath(node)
+    def GetNode(self, node_id):
+        if node_id not in self.__index:
+            _path = self.__NodeToPath(node_id)
             if path.isfile(_path):
-                js = LoadJson()
-                self.__index[node] = Node(js)
+                js = LoadJson(_path)
+                self.__index[node_id] = Node(self, js)
             else:
                 return None
-        return self.__index[node]
+        return self.__index[node_id]
+
+    def CreateNode(self, node_id):
+        _path = self.__NodeToPath(node_id)
+        if path.isfile(_path):
+            # Узел есть - откроем его
+            return self.GetNode(node_id)
+        # Узла нет - создадим
+        self.__index[node_id] = Node.Create(self, node_id)
+        self.__index[node_id].SetDirty()
+        return self.__index[node_id]
+
+    def SaveNode(self, node):
+        _path = self.__NodeToPath(node.Id)
+        SaveJson(_path, node.Content)
+
+    def SetDirty(self, node):
+        self.__dirty.append(node)
 
     def SaveAllChanges(self):
-        pass
+        for node in self.__dirty:
+            self.SaveNode(node)
+        self.__dirty.clear()
 
 
 def main():
-    p = path.join(path.abspath(__file__), 'test_database')
+    direct = pathlib.Path(__file__).parent.absolute()
+    p = path.join(direct, 'test_database')
     db = GraphDB(p)
+    atom = db.CreateNode('atom')
+    symbol = db.CreateNode('symbol')
+    symbol.Type = atom
+    db.SaveAllChanges()
 
 
 if __name__ == '__main__':
