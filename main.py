@@ -101,9 +101,43 @@ def main():
     direct = pathlib.Path(__file__).parent.absolute()
     p = path.join(direct, 'test_database')
     db = GraphDB(p)
-    atom = db.CreateNode('atom')
-    symbol = db.CreateNode('symbol')
-    symbol.Type = atom
+    relation = db.CreateNode('relations.relation')
+    isa = db.CreateNode('relations.isa')
+    aka = db.CreateNode('relations.aka')
+
+    atom = db.CreateNode('types.atom')
+    symbol = db.CreateNode('types.symbol', atom)
+
+    db.CreateLink(isa, isa, relation)
+    db.CreateLink(aka, isa, relation)
+    db.CreateLink(symbol, isa, atom)
+
+    db.SaveAllChanges()
+
+    category = db.CreateNode('category')
+
+    _obj_ = db.CreateNode('category.object')
+    _sub_ = db.CreateNode('category.subject')
+    _bei_ = db.CreateNode('category.being')
+    _cre_ = db.CreateNode('category.creature')
+    _animal_ = db.CreateNode('category.animal')
+    _mammal_ = db.CreateNode('category.mammal')
+    _human_ = db.CreateNode('category.human')
+
+    db.CreateLink(_human_, isa, _mammal_)
+    db.CreateLink(_mammal_, isa, _animal_)
+    db.CreateLink(_animal_, isa, _cre_)
+    db.CreateLink(_cre_, isa, _bei_)
+    db.CreateLink(_bei_, isa, _sub_)
+    db.CreateLink(_sub_, isa, _obj_)
+
+    db.CreateLink(_human_, aka, category)
+    db.CreateLink(_mammal_, isa, category)
+    db.CreateLink(_animal_, isa, category)
+    db.CreateLink(_cre_, isa, category)
+    db.CreateLink(_bei_, isa, category)
+    db.CreateLink(_sub_, isa, category)
+
     db.SaveAllChanges()
 
 

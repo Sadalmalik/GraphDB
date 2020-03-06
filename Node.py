@@ -65,7 +65,7 @@ class Node:
 
     @Type.setter
     def Type(self, value):
-        self.__content['type'] = value.Id
+        self.__content['type'] = value.Id if value else None
         self.SetDirty()
 
     @property
@@ -74,7 +74,7 @@ class Node:
 
     @From.setter
     def From(self, value):
-        self.__content['from'] = value.Id
+        self.__content['from'] = value.Id if value else None
         self.SetDirty()
 
     @property
@@ -83,7 +83,7 @@ class Node:
 
     @Into.setter
     def Into(self, value):
-        self.__content['into'] = value.Id
+        self.__content['into'] = value.Id if value else None
         self.SetDirty()
 
     @property
