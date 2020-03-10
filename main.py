@@ -94,7 +94,7 @@ https://www.python-course.eu/python3_properties.php
 import pathlib
 from os import path
 
-from GraphDB import GraphDB
+from Graph.GraphDB import GraphDB
 
 
 def main():

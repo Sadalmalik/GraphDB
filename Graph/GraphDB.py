@@ -1,19 +1,8 @@
 import os
 from os import path
 
-from Functions import LoadJson, SaveJson
-from Node import Node
-
-
-def GetCrossPath(a, b):
-    a = a.split('.')
-    b = b.split('.')
-    result = []
-    for x, y in zip(a, b):
-        if x != y:
-            break
-        result.append(x)
-    return '.'.join(result)
+from Graph.Functions import *
+from Graph.Node import Node
 
 
 class GraphDB:
